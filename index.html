@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RPG de Texto — Fluxograma do Projeto</title>
+  <style>
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #1a1a2e;
+      overflow: hidden;
+      user-select: none;
+      cursor: grab;
+    }
+    body.grabbing { cursor: grabbing; }
+
+    /* ===== CANVAS ===== */
+    #canvas-wrap {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 7000px;
+      height: 5000px;
+      transform-origin: 0 0;
+    }
+
+    /* ===== GRID BACKGROUND ===== */
+    #canvas::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(circle, rgba(255,255,255,0.08) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    /* ===== TOOLBAR ===== */
+    #toolbar {
+      position: fixed;
+      top: 18px; left: 50%;
+      transform: translateX(-50%);
+      z-index: 999;
+      display: flex;
+      gap: 10px;
+      background: rgba(255,255,255,0.07);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 40px;
+      padding: 8px 18px;
+      align-items: center;
+    }
+    #toolbar span {
+      color: rgba(255,255,255,0.55);
+      font-size: 12px;
+      letter-spacing: 0.5px;
+    }
+    .tb-btn {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #fff;
+      border-radius: 8px;
+      padding: 5px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .tb-btn:hover { background: rgba(255,255,255,0.2); }
+
+    /* ===== LEGEND ===== */
+    #legend {
+      position: fixed;
+      bottom: 24px; left: 24px;
+      z-index: 999;
+      background: rgba(20,20,40,0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 14px;
+      padding: 14px 18px;
+      color: #fff;
+      font-size: 12px;
+      min-width: 190px;
+    }
+    #legend h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.45); margin-bottom: 10px; }
+    .leg-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .leg-dot { width: 13px; height: 13px; border-radius: 3px; flex-shrink: 0; }
+
+    /* ===== ZOOM INDICATOR ===== */
+    #zoom-info {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      z-index: 999;
+      background: rgba(20,20,40,0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 8px 14px;
+      color: rgba(255,255,255,0.6);
+      font-size: 12px;
+    }
+
+    /* ===== SVG ARROWS ===== */
+    #arrows-svg {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    /* ===== SECTION LABELS ===== */
+    .section-label {
+      position: absolute;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.2);
+      pointer-events: none;
+    }
+
+    /* ===== NODES ===== */
+    .node {
+      position: absolute;
+      border-radius: 16px;
+      padding: 16px 20px;
+      color: #fff;
+      font-size: 13px;
+      line-height: 1.5;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06);
+      transition: box-shadow .2s, transform .15s;
+      cursor: default;
+    }
+    .node:hover {
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6), 0 0 0 2px rgba(255,255,255,0.18);
+      transform: translateY(-2px);
+      z-index: 10;
+    }
+    .node-title {
+      font-weight: 700;
+      font-size: 13px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .node-icon { font-size: 16px; }
+    .node-body { font-size: 11.5px; color: rgba(255,255,255,0.75); line-height: 1.6; }
+    .node-tag {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      background: rgba(255,255,255,0.12);
+      border-radius: 4px;
+      padding: 2px 6px;
+      margin-bottom: 6px;
+    }
+
+    /* ===== DIAMOND (decision) ===== */
+    .diamond-wrap {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .diamond {
+      width: 140px;
+      height: 140px;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      transform: rotate(45deg);
+      border-radius: 10px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+      transition: box-shadow .2s, transform .15s;
+    }
+    .diamond-wrap:hover .diamond {
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6), 0 0 0 2px rgba(255,255,255,0.25);
+    }
+    .diamond-text {
+      position: absolute;
+      text-align: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 12px;
+      pointer-events: none;
+      line-height: 1.3;
+      padding: 0 10px;
+    }
+
+    /* ===== TABLE NODE ===== */
+    .table-node {
+      position: absolute;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07);
+      min-width: 260px;
+      transition: box-shadow .2s, transform .15s;
+      font-size: 12px;
+    }
+    .table-node:hover {
+      box-shadow: 0 14px 44px rgba(0,0,0,0.65), 0 0 0 2px rgba(255,255,255,0.2);
+      transform: translateY(-2px);
+      z-index: 10;
+    }
+    .table-header {
+      padding: 10px 16px;
+      font-weight: 700;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #fff;
+    }
+    .table-body { background: rgba(10,10,25,0.85); }
+    .table-row {
+      display: flex;
+      align-items: center;
+      padding: 6px 16px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      gap: 8px;
+      color: rgba(255,255,255,0.82);
+    }
+    .table-row:hover { background: rgba(255,255,255,0.04); }
+    .col-name { flex: 1; font-family: 'Courier New', monospace; font-size: 11.5px; }
+    .col-type { font-size: 10px; color: rgba(255,255,255,0.4); font-family: monospace; }
+    .col-pk {
+      font-size: 9px;
+      font-weight: 700;
+      background: rgba(251,191,36,0.2);
+      color: #fbbf24;
+      border-radius: 3px;
+      padding: 1px 5px;
+      letter-spacing: 0.5px;
+    }
+    .col-fk {
+      font-size: 9px;
+      font-weight: 700;
+      background: rgba(99,102,241,0.2);
+      color: #a5b4fc;
+      border-radius: 3px;
+      padding: 1px 5px;
+      letter-spacing: 0.5px;
+    }
+    .col-nn {
+      font-size: 9px;
+      font-weight: 700;
+      background: rgba(16,185,129,0.15);
+      color: #6ee7b7;
+      border-radius: 3px;
+      padding: 1px 5px;
+    }
+
+    /* ===== COLORS ===== */
+    /* Flow nodes */
+    .c-start    { background: linear-gradient(135deg, #10b981, #059669); }
+    .c-end      { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .c-login    { background: linear-gradient(135deg, #6366f1, #4f46e5); }
+    .c-char     { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+    .c-story    { background: linear-gradient(135deg, #ec4899, #db2777); }
+    .c-dungeon  { background: linear-gradient(135deg, #f97316, #ea580c); }
+    .c-combat   { background: linear-gradient(135deg, #dc2626, #b91c1c); }
+    .c-victory  { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .c-defeat   { background: linear-gradient(135deg, #374151, #1f2937); }
+    .c-info     { background: linear-gradient(135deg, #0ea5e9, #0284c7); }
+
+    /* Table headers */
+    .th-users   { background: linear-gradient(135deg, #6366f1, #4f46e5); }
+    .th-chars   { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+    .th-enemies { background: linear-gradient(135deg, #dc2626, #b91c1c); }
+    .th-rooms   { background: linear-gradient(135deg, #f97316, #ea580c); }
+    .th-progress{ background: linear-gradient(135deg, #10b981, #059669); }
+    .th-items   { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .th-combat  { background: linear-gradient(135deg, #ec4899, #db2777); }
+
+    /* ===== CONNECTOR LABELS ===== */
+    .conn-label {
+      position: absolute;
+      background: rgba(20,20,40,0.9);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 10px;
+      color: rgba(255,255,255,0.7);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    /* ===== AREA BACKGROUNDS ===== */
+    .area {
+      position: absolute;
+      border-radius: 24px;
+      border: 2px dashed rgba(255,255,255,0.07);
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+<div id="toolbar">
+  <span>🎮 RPG de Texto — Fluxograma</span>
+  <button class="tb-btn" onclick="resetView()">⌂ Reset</button>
+  <button class="tb-btn" onclick="zoomIn()">＋ Zoom</button>
+  <button class="tb-btn" onclick="zoomOut()">－ Zoom</button>
+  <button class="tb-btn" onclick="goToFlow()">Fluxo do Programa</button>
+  <button class="tb-btn" onclick="goToDb()">Banco de Dados</button>
+</div>
+
+<div id="legend">
+  <h4>Legenda</h4>
+  <div class="leg-row"><div class="leg-dot" style="background:linear-gradient(135deg,#10b981,#059669)"></div> Início / Fim</div>
+  <div class="leg-row"><div class="leg-dot" style="background:linear-gradient(135deg,#6366f1,#4f46e5)"></div> Login / Auth</div>
+  <div class="leg-row"><div class="leg-dot" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed)"></div> Personagem</div>
+  <div class="leg-row"><div class="leg-dot" style="background:linear-gradient(135deg,#ec4899,#db2777)"></div> Narrativa</div>
+  <div class="leg-row"><div class="leg-dot" style="background:linear-gradient(135deg,#f97316,#ea580c)"></div> Dungeon / Sala</div>
+  <div class="leg-row"><div class="leg-dot" style="background:linear-gradient(135deg,#dc2626,#b91c1c)"></div> Combate</div>
+  <div class="leg-row"><div class="leg-dot" style="background:linear-gradient(135deg,#f59e0b,#d97706)"></div> Decisão / Vitória</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#fbbf24; border-radius:2px"></div> PK — Chave Primária</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#a5b4fc; border-radius:2px"></div> FK — Chave Estrangeira</div>
+</div>
+
+<div id="zoom-info">Zoom: <span id="zoom-val">65%</span></div>
+
+<div id="canvas-wrap">
+  <div id="canvas">
+    <svg id="arrows-svg"></svg>
+
+    <!-- ============================================================ -->
+    <!--  SECTION A — FLUXO DO PROGRAMA                              -->
+    <!-- ============================================================ -->
+
+    <!-- Area background -->
+    <div class="area" style="left:60px;top:60px;width:1100px;height:3700px;background:rgba(99,102,241,0.02)"></div>
+    <div class="section-label" style="left:80px;top:80px;">Fluxo do Programa</div>
+
+    <!-- START -->
+    <div class="node c-start" id="n-start" style="left:380px;top:120px;width:220px;">
+      <div class="node-title"><span class="node-icon">▶</span> Início do Jogo</div>
+      <div class="node-body">Execução do programa Java no terminal</div>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="node c-login" id="n-login" style="left:340px;top:280px;width:300px;">
+      <div class="node-tag">Cena 0 — Auth</div>
+      <div class="node-title"><span class="node-icon">🔐</span> Tela de Login</div>
+      <div class="node-body">Usuário informa <strong>login</strong> e <strong>senha</strong>.<br>Sistema valida credenciais no banco.</div>
+    </div>
+
+    <!-- DECISION: login ok? -->
+    <div class="diamond-wrap" id="d-login" style="left:390px;top:460px;width:200px;height:140px;">
+      <div class="diamond"></div>
+      <div class="diamond-text">Login<br>válido?</div>
+    </div>
+
+    <!-- ERRO LOGIN -->
+    <div class="node c-defeat" id="n-loginerr" style="left:660px;top:490px;width:220px;">
+      <div class="node-title"><span class="node-icon">✖</span> Credenciais Inválidas</div>
+      <div class="node-body">Exibe mensagem de erro em vermelho.<br>Retorna à tela de login.</div>
+    </div>
+
+    <!-- CHAR CREATION -->
+    <div class="node c-char" id="n-char" style="left:310px;top:680px;width:360px;">
+      <div class="node-tag">Criação de Personagem</div>
+      <div class="node-title"><span class="node-icon">⚔</span> Criação do Personagem</div>
+      <div class="node-body">
+        Jogador define:<br>
+        • <strong>Nome</strong> do personagem<br>
+        • <strong>Classe</strong>: Guerreiro · Tank · Assassino<br>
+        • <strong>Idade</strong> e <strong>Gênero</strong><br>
+        Dados salvos no banco de dados.
+      </div>
+    </div>
+
+    <!-- INTRO STORY -->
+    <div class="node c-story" id="n-intro" style="left:320px;top:900px;width:340px;">
+      <div class="node-tag">Cena 1 — Narrativa</div>
+      <div class="node-title"><span class="node-icon">📖</span> Introdução da História</div>
+      <div class="node-body">Texto narrativo exibido lentamente.<br>Cores destacam momentos importantes.<br>Contextualiza o jogador no mundo.</div>
+    </div>
+
+    <!-- DUNGEON ENTRY -->
+    <div class="node c-dungeon" id="n-dungeon" style="left:340px;top:1100px;width:300px;">
+      <div class="node-title"><span class="node-icon">🏰</span> Entrada na Dungeon</div>
+      <div class="node-body">Progressão por 5 salas sequenciais.<br>Cada sala possui um inimigo único.</div>
+    </div>
+
+    <!-- SALA 1 -->
+    <div class="node c-dungeon" id="n-s1" style="left:100px;top:1320px;width:240px;">
+      <div class="node-tag">Sala 1</div>
+      <div class="node-title"><span class="node-icon">💀</span> Esqueleto</div>
+      <div class="node-body">Inimigo inicial. Baixa dificuldade.</div>
+    </div>
+
+    <!-- COMBAT LOOP -->
+    <div class="node c-combat" id="n-combat1" style="left:100px;top:1510px;width:240px;">
+      <div class="node-title"><span class="node-icon">⚡</span> Turno de Combate</div>
+      <div class="node-body">
+        Opções do jogador:<br>
+        • <strong>Atacar</strong><br>
+        • <strong>Usar Poção</strong>
+      </div>
+    </div>
+
+    <!-- DECISION: player dead? -->
+    <div class="diamond-wrap" id="d-dead1" style="left:80px;top:1700px;width:200px;height:140px;">
+      <div class="diamond"></div>
+      <div class="diamond-text">Jogador<br>morreu?</div>
+    </div>
+
+    <!-- GAME OVER -->
+    <div class="node c-end" id="n-gameover" style="left:360px;top:1720px;width:220px;">
+      <div class="node-title"><span class="node-icon">💔</span> Game Over</div>
+      <div class="node-body">Exibe mensagem de derrota.<br>Progresso salvo no banco.</div>
+    </div>
+
+    <!-- DECISION: enemy dead? -->
+    <div class="diamond-wrap" id="d-win1" style="left:80px;top:1900px;width:200px;height:140px;">
+      <div class="diamond"></div>
+      <div class="diamond-text">Inimigo<br>derrotado?</div>
+    </div>
+
+    <!-- SALA 2 -->
+    <div class="node c-dungeon" id="n-s2" style="left:100px;top:2110px;width:240px;">
+      <div class="node-tag">Sala 2</div>
+      <div class="node-title"><span class="node-icon">👺</span> Goblin</div>
+      <div class="node-body">Dificuldade moderada.</div>
+    </div>
+
+    <!-- SALA 3 -->
+    <div class="node c-dungeon" id="n-s3" style="left:100px;top:2290px;width:240px;">
+      <div class="node-tag">Sala 3</div>
+      <div class="node-title"><span class="node-icon">😈</span> Demônio</div>
+      <div class="node-body">Dificuldade elevada.</div>
+    </div>
+
+    <!-- SALA 4 -->
+    <div class="node c-dungeon" id="n-s4" style="left:100px;top:2470px;width:240px;">
+      <div class="node-tag">Sala 4</div>
+      <div class="node-title"><span class="node-icon">🗡</span> Cavaleiro Negro</div>
+      <div class="node-body">Dificuldade muito alta.</div>
+    </div>
+
+    <!-- SALA 5 / BOSS -->
+    <div class="node c-combat" id="n-s5" style="left:100px;top:2650px;width:240px;">
+      <div class="node-tag">Sala 5 — Boss Final</div>
+      <div class="node-title"><span class="node-icon">👑</span> Rei Demônio</div>
+      <div class="node-body">Inimigo final. Dificuldade máxima.</div>
+    </div>
+
+    <!-- DECISION: boss dead? -->
+    <div class="diamond-wrap" id="d-boss" style="left:80px;top:2860px;width:200px;height:140px;">
+      <div class="diamond"></div>
+      <div class="diamond-text">Boss<br>derrotado?</div>
+    </div>
+
+    <!-- FINAL STORY -->
+    <div class="node c-story" id="n-final" style="left:320px;top:3060px;width:340px;">
+      <div class="node-tag">Cena 7 — Narrativa Final</div>
+      <div class="node-title"><span class="node-icon">📜</span> Encerramento da História</div>
+      <div class="node-body">Texto narrativo final exibido lentamente.<br>Conclusão da jornada do personagem.</div>
+    </div>
+
+    <!-- END -->
+    <div class="node c-end" id="n-end" style="left:380px;top:3270px;width:220px;">
+      <div class="node-title"><span class="node-icon">■</span> Fim do Jogo</div>
+      <div class="node-body">Sessão encerrada. Dados persistidos.</div>
+    </div>
+
+    <!-- COMBAT REPEAT NODES (Salas 2-5 reutilizam o mesmo loop visual) -->
+    <!-- Indicador de loop -->
+    <div class="node c-info" id="n-loop" style="left:420px;top:1510px;width:260px;">
+      <div class="node-title"><span class="node-icon">🔄</span> Loop de Combate</div>
+      <div class="node-body">O mesmo ciclo de turno se repete em todas as 5 salas. O jogador escolhe ação a cada turno até vencer ou ser derrotado.</div>
+    </div>
+
+    <!-- CLASS INFO -->
+    <div class="node c-char" id="n-classes" style="left:740px;top:680px;width:300px;">
+      <div class="node-tag">Classes Disponíveis</div>
+      <div class="node-title"><span class="node-icon">🛡</span> Atributos por Classe</div>
+      <div class="node-body">
+        <strong>Guerreiro</strong> — Alto ataque, vida média<br>
+        <strong>Tank</strong> — Alta defesa, vida alta<br>
+        <strong>Assassino</strong> — Ataque crítico, vida baixa
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!--  SECTION B — BANCO DE DADOS                                 -->
+    <!-- ============================================================ -->
+
+    <div class="area" style="left:1280px;top:60px;width:1600px;height:3700px;background:rgba(16,185,129,0.02)"></div>
+    <div class="section-label" style="left:1300px;top:80px;">Banco de Dados — Modelo Relacional</div>
+
+    <!-- TABLE: usuarios -->
+    <div class="table-node" id="t-users" style="left:1320px;top:140px;width:300px;">
+      <div class="table-header th-users">🔐 usuarios</div>
+      <div class="table-body">
+        <div class="table-row"><span class="col-name">id_usuario</span><span class="col-type">INT</span><span class="col-pk">PK</span></div>
+        <div class="table-row"><span class="col-name">login</span><span class="col-type">VARCHAR(60)</span><span class="col-nn">NN</span></div>
+        <div class="table-row"><span class="col-name">senha_hash</span><span class="col-type">VARCHAR(255)</span><span class="col-nn">NN</span></div>
+        <div class="table-row"><span class="col-name">criado_em</span><span class="col-type">DATETIME</span></div>
+        <div class="table-row"><span class="col-name">ultimo_login</span><span class="col-type">DATETIME</span></div>
+      </div>
+    </div>
+
+    <!-- TABLE: personagens -->
+    <div class="table-node" id="t-chars" style="left:1700px;top:140px;width:310px;">
+      <div class="table-header th-chars">⚔ personagens</div>
+      <div class="table-body">
+        <div class="table-row"><span class="col-name">id_personagem</span><span class="col-type">INT</span><span class="col-pk">PK</span></div>
+        <div class="table-row"><span class="col-name">id_usuario</span><span class="col-type">INT</span><span class="col-fk">FK</span></div>
+        <div class="table-row"><span class="col-name">nome</span><span class="col-type">VARCHAR(80)</span><span class="col-nn">NN</span></div>
+        <div class="table-row"><span class="col-name">classe</span><span class="col-type">ENUM(Guerreiro,Tank,Assassino)</span></div>
+        <div class="table-row"><span class="col-name">idade</span><span class="col-type">INT</span></div>
+        <div class="table-row"><span class="col-name">genero</span><span class="col-type">VARCHAR(30)</span></div>
+        <div class="table-row"><span class="col-name">hp_max</span><span class="col-type">INT</span></div>
+        <div class="table-row"><span class="col-name">hp_atual</span><span class="col-type">INT</span></div>
+        <div class="table-row"><span class="col-name">ataque</span><span class="col-type">INT</span></div>
+        <div class="table-row"><span class="col-name">defesa</span><span class="col-type">INT</span></div>
+        <div class="table-row"><span class="col-name">criado_em</span><span class="col-type">DATETIME</span></div>
+      </div>
+    </div>
+
+    <!-- TABLE: inimigos -->
+    <div class="table-node" id="t-enemies" style="left:1320px;top:560px;width:300px;">
+      <div class="table-header th-enemies">👹 inimigos</div>
+      <div class="table-body">
+        <div class="table-row"><span class="col-name">id_inimigo</span><span class="col-type">INT</span><span class="col-pk">PK</span></div>
+        <div class="table-row"><span class="col-name">nome</span><span class="col-type">VARCHAR(80)</span><span class="col-nn">NN</span></div>
+        <div class="table-row"><span class="col-name">hp_max</span><span class="col-type">INT</span></div>
+        <div class="table-row"><span class="col-name">ataque_min</span><span class="col-type">INT</span></div>
+        <div class="table-row"><span class="col-name">ataque_max</span><span class="col-type">INT</span></div>
+        <div class="table-row"><span class="col-name">defesa</span><span class="col-type">INT</span></div>
+        <div class="table-row"><span class="col-name">descricao</span><span class="col-type">TEXT</span></div>
+      </div>
+    </div>
+
+    <!-- TABLE: salas -->
+    <div class="table-node" id="t-rooms" style="left:1700px;top:560px;width:300px;">
+      <div class="table-header th-rooms">🏰 salas</div>
+      <div class="table-body">
+        <div class="table-row"><span class="col-name">id_sala</span><span class="col-type">INT</span><span class="col-pk">PK</span></div>
+        <div class="table-row"><span class="col-name">numero_sala</span><span class="col-type">INT</span><span class="col-nn">NN</span></div>
+        <div class="table-row"><span class="col-name">id_inimigo</span><span class="col-type">INT</span><span class="col-fk">FK</span></div>
+        <div class="table-row"><span class="col-name">nome_sala</span><span class="col-type">VARCHAR(80)</span></div>
+        <div class="table-row"><span class="col-name">descricao</span><span class="col-type">TEXT</span></div>
+        <div class="table-row"><span class="col-name">ordem</span><span class="col-type">INT</span></div>
+      </div>
+    </div>
+
+    <!-- TABLE: progresso_jogador -->
+    <div class="table-node" id="t-progress" style="left:1320px;top:1000px;width:320px;">
+      <div class="table-header th-progress">📊 progresso_jogador</div>
+      <div class="table-body">
+        <div class="table-row"><span class="col-name">id_progresso</span><span class="col-type">INT</span><span class="col-pk">PK</span></div>
+        <div class="table-row"><span class="col-name">id_personagem</span><span class="col-type">INT</span><span class="col-fk">FK</span></div>
+        <div class="table-row"><span class="col-name">sala_atual</span><span class="col-type">INT</span></div>
+        <div class="table-row"><span class="col-name">salas_concluidas</span><span class="col-type">INT</span></div>
+        <div class="table-row"><span class="col-name">status</span><span class="col-type">ENUM(ativo,vitoria,derrota)</span></div>
+        <div class="table-row"><span class="col-name">iniciado_em</span><span class="col-type">DATETIME</span></div>
+        <div class="table-row"><span class="col-name">atualizado_em</span><span class="col-type">DATETIME</span></div>
+      </div>
+    </div>
+
+    <!-- TABLE: inventario -->
+    <div class="table-node" id="t-items" style="left:1720px;top:1000px;width:290px;">
+      <div class="table-header th-items">🧪 inventario</div>
+      <div class="table-body">
+        <div class="table-row"><span class="col-name">id_item</span><span class="col-type">INT</span><span class="col-pk">PK</span></div>
+        <div class="table-row"><span class="col-name">id_personagem</span><span class="col-type">INT</span><span class="col-fk">FK</span></div>
+        <div class="table-row"><span class="col-name">tipo_item</span><span class="col-type">ENUM(pocao,equipamento)</span></div>
+        <div class="table-row"><span class="col-name">nome_item</span><span class="col-type">VARCHAR(80)</span></div>
+        <div class="table-row"><span class="col-name">quantidade</span><span class="col-type">INT</span></div>
+        <div class="table-row"><span class="col-name">valor_efeito</span><span class="col-type">INT</span></div>
+      </div>
+    </div>
+
+    <!-- TABLE: log_combate -->
+    <div class="table-node" id="t-combat" style="left:1320px;top:1440px;width:320px;">
+      <div class="table-header th-combat">⚡ log_combate</div>
+      <div class="table-body">
+        <div class="table-row"><span class="col-name">id_log</span><span class="col-type">INT</span><span class="col-pk">PK</span></div>
+        <div class="table-row"><span class="col-name">id_progresso</span><span class="col-type">INT</span><span class="col-fk">FK</span></div>
+        <div class="table-row"><span class="col-name">id_sala</span><span class="col-type">INT</span><span class="col-fk">FK</span></div>
+        <div class="table-row"><span class="col-name">turno</span><span class="col-type">INT</span></div>
+        <div class="table-row"><span class="col-name">acao_jogador</span><span class="col-type">ENUM(atacar,usar_pocao)</span></div>
+        <div class="table-row"><span class="col-name">dano_causado</span><span class="col-type">INT</span></div>
+        <div class="table-row"><span class="col-name">dano_recebido</span><span class="col-type">INT</span></div>
+        <div class="table-row"><span class="col-name">hp_jogador_pos</span><span class="col-type">INT</span></div>
+        <div class="table-row"><span class="col-name">hp_inimigo_pos</span><span class="col-type">INT</span></div>
+        <div class="table-row"><span class="col-name">timestamp</span><span class="col-type">DATETIME</span></div>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!--  SECTION C — RELACIONAMENTOS ER                             -->
+    <!-- ============================================================ -->
+    <div class="section-label" style="left:1300px;top:1900px;">Diagrama de Relacionamentos (ER)</div>
+
+    <!-- ER simplified visual -->
+    <div class="node c-info" id="er-rel" style="left:1320px;top:1940px;width:960px;">
+      <div class="node-title"><span class="node-icon">🔗</span> Relacionamentos entre Tabelas</div>
+      <div class="node-body" style="font-size:12px;line-height:2;">
+        <strong>usuarios</strong> (1) ──── (N) <strong>personagens</strong> &nbsp;→ Um usuário pode ter vários personagens<br>
+        <strong>personagens</strong> (1) ──── (1) <strong>progresso_jogador</strong> &nbsp;→ Cada personagem tem um progresso de sessão<br>
+        <strong>personagens</strong> (1) ──── (N) <strong>inventario</strong> &nbsp;→ Personagem possui múltiplos itens<br>
+        <strong>salas</strong> (1) ──── (1) <strong>inimigos</strong> &nbsp;→ Cada sala tem um inimigo fixo<br>
+        <strong>progresso_jogador</strong> (1) ──── (N) <strong>log_combate</strong> &nbsp;→ Progresso registra todos os turnos<br>
+        <strong>log_combate</strong> (N) ──── (1) <strong>salas</strong> &nbsp;→ Log referencia a sala do combate
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!--  SECTION D — ARQUITETURA JAVA                               -->
+    <!-- ============================================================ -->
+    <div class="area" style="left:3000px;top:60px;width:1300px;height:2200px;background:rgba(236,72,153,0.02)"></div>
+    <div class="section-label" style="left:3020px;top:80px;">Arquitetura Java — Classes Principais</div>
+
+    <div class="node c-info" id="cls-main" style="left:3100px;top:140px;width:280px;">
+      <div class="node-tag">Classe</div>
+      <div class="node-title"><span class="node-icon">☕</span> Main.java</div>
+      <div class="node-body">Ponto de entrada. Inicializa o jogo e gerencia o fluxo principal de cenas.</div>
+    </div>
+
+    <div class="node c-login" id="cls-auth" style="left:3100px;top:340px;width:280px;">
+      <div class="node-tag">Classe</div>
+      <div class="node-title"><span class="node-icon">🔐</span> AuthService.java</div>
+      <div class="node-body">Gerencia login, validação de credenciais e hash de senha. Conecta com tabela <em>usuarios</em>.</div>
+    </div>
+
+    <div class="node c-char" id="cls-char" style="left:3100px;top:540px;width:280px;">
+      <div class="node-tag">Classe</div>
+      <div class="node-title"><span class="node-icon">⚔</span> Personagem.java</div>
+      <div class="node-body">Representa o herói. Atributos: nome, classe, HP, ataque, defesa. Métodos: atacar(), curar().</div>
+    </div>
+
+    <div class="node c-combat" id="cls-enemy" style="left:3100px;top:740px;width:280px;">
+      <div class="node-tag">Classe</div>
+      <div class="node-title"><span class="node-icon">👹</span> Inimigo.java</div>
+      <div class="node-body">Representa cada monstro da dungeon. Herda de Entidade. Atributos: nome, HP, ataque.</div>
+    </div>
+
+    <div class="node c-dungeon" id="cls-dungeon" style="left:3100px;top:940px;width:280px;">
+      <div class="node-tag">Classe</div>
+      <div class="node-title"><span class="node-icon">🏰</span> Dungeon.java</div>
+      <div class="node-body">Controla a progressão de salas. Instancia inimigos e gerencia transição entre cenas.</div>
+    </div>
+
+    <div class="node c-combat" id="cls-combat" style="left:3100px;top:1140px;width:280px;">
+      <div class="node-tag">Classe</div>
+      <div class="node-title"><span class="node-icon">⚡</span> SistemaCombate.java</div>
+      <div class="node-body">Loop de turnos. Processa ações: atacar e usar poção. Calcula dano e registra log.</div>
+    </div>
+
+    <div class="node c-story" id="cls-narr" style="left:3100px;top:1340px;width:280px;">
+      <div class="node-tag">Classe</div>
+      <div class="node-title"><span class="node-icon">📖</span> Narrador.java</div>
+      <div class="node-body">Exibe texto lentamente com efeito de digitação. Aplica cores ANSI ao terminal.</div>
+    </div>
+
+    <div class="node c-info" id="cls-db" style="left:3100px;top:1540px;width:280px;">
+      <div class="node-tag">Classe</div>
+      <div class="node-title"><span class="node-icon">🗄</span> DatabaseManager.java</div>
+      <div class="node-body">Gerencia conexão JDBC com o banco. Executa queries de CRUD para todas as tabelas.</div>
+    </div>
+
+    <div class="node c-victory" id="cls-inv" style="left:3100px;top:1740px;width:280px;">
+      <div class="node-tag">Classe</div>
+      <div class="node-title"><span class="node-icon">🧪</span> Inventario.java</div>
+      <div class="node-body">Gerencia itens do personagem. Método usarPocao() restaura HP durante combate.</div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!--  SECTION E — FLUXO DE DADOS                                 -->
+    <!-- ============================================================ -->
+    <div class="area" style="left:3000px;top:2300px;width:1300px;height:1500px;background:rgba(16,185,129,0.02)"></div>
+    <div class="section-label" style="left:3020px;top:2320px;">Fluxo de Dados — Terminal ↔ Java ↔ Banco</div>
+
+    <div class="node c-info" id="fd-terminal" style="left:3060px;top:2380px;width:240px;">
+      <div class="node-title"><span class="node-icon">💻</span> Terminal</div>
+      <div class="node-body">Entrada do usuário via Scanner.<br>Saída colorida via ANSI codes.</div>
+    </div>
+
+    <div class="node c-char" id="fd-java" style="left:3380px;top:2380px;width:240px;">
+      <div class="node-title"><span class="node-icon">☕</span> Camada Java</div>
+      <div class="node-body">Lógica de negócio, combate, narrativa e controle de fluxo.</div>
+    </div>
+
+    <div class="node c-info" id="fd-db" style="left:3700px;top:2380px;width:240px;">
+      <div class="node-title"><span class="node-icon">🗄</span> Banco de Dados</div>
+      <div class="node-body">MySQL / SQLite via JDBC.<br>Persiste progresso e logs.</div>
+    </div>
+
+    <div class="node c-info" id="fd-flow" style="left:3060px;top:2580px;width:880px;">
+      <div class="node-title"><span class="node-icon">🔄</span> Ciclo de Dados por Turno de Combate</div>
+      <div class="node-body" style="font-size:12px;line-height:1.9;">
+        1. Jogador digita opção no terminal (1=Atacar / 2=Poção)<br>
+        2. <strong>SistemaCombate</strong> processa a ação e calcula dano<br>
+        3. Inimigo responde com ataque aleatório dentro do range<br>
+        4. HPs são atualizados em memória (<strong>Personagem</strong> e <strong>Inimigo</strong>)<br>
+        5. <strong>DatabaseManager</strong> salva turno em <em>log_combate</em><br>
+        6. <strong>Narrador</strong> exibe resultado colorido no terminal<br>
+        7. Verificação de condição de vitória/derrota → próxima sala ou Game Over
+      </div>
+    </div>
+
+  </div><!-- end #canvas -->
+</div><!-- end #canvas-wrap -->
+
+<script>
+  // ===== PAN & ZOOM =====
+  const wrap = document.getElementById('canvas-wrap');
+  const canvas = document.getElementById('canvas');
+  let scale = 0.65, tx = -200, ty = -60;
+  let isDragging = false, startX, startY, startTx, startTy;
+
+  function applyTransform() {
+    canvas.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+    document.getElementById('zoom-val').textContent = Math.round(scale * 100) + '%';
+  }
+
+  wrap.addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
+    isDragging = true;
+    startX = e.clientX; startY = e.clientY;
+    startTx = tx; startTy = ty;
+    document.body.classList.add('grabbing');
+  });
+
+  window.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    tx = startTx + (e.clientX - startX);
+    ty = startTy + (e.clientY - startY);
+    applyTransform();
+  });
+
+  window.addEventListener('mouseup', () => {
+    isDragging = false;
+    document.body.classList.remove('grabbing');
+  });
+
+  wrap.addEventListener('wheel', e => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.07 : 0.07;
+    const newScale = Math.min(2.5, Math.max(0.15, scale + delta));
+    const rect = wrap.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    tx = mx - (mx - tx) * (newScale / scale);
+    ty = my - (my - ty) * (newScale / scale);
+    scale = newScale;
+    applyTransform();
+  }, { passive: false });
+
+  // Touch support
+  let lastTouchDist = null;
+  wrap.addEventListener('touchstart', e => {
+    if (e.touches.length === 1) {
+      isDragging = true;
+      startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+      startTx = tx; startTy = ty;
+    }
+  });
+  wrap.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if (e.touches.length === 1 && isDragging) {
+      tx = startTx + (e.touches[0].clientX - startX);
+      ty = startTy + (e.touches[0].clientY - startY);
+      applyTransform();
+    } else if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (lastTouchDist) {
+        scale = Math.min(2.5, Math.max(0.15, scale * (dist / lastTouchDist)));
+        applyTransform();
+      }
+      lastTouchDist = dist;
+    }
+  }, { passive: false });
+  wrap.addEventListener('touchend', () => { isDragging = false; lastTouchDist = null; });
+
+  function zoomIn()  { scale = Math.min(2.5, scale + 0.1); applyTransform(); }
+  function zoomOut() { scale = Math.max(0.15, scale - 0.1); applyTransform(); }
+  function resetView() { scale = 0.65; tx = -200; ty = -60; applyTransform(); }
+  function goToFlow() { scale = 0.65; tx = -60; ty = -80; applyTransform(); }
+  function goToDb()  { scale = 0.65; tx = -1100; ty = -80; applyTransform(); }
+
+  applyTransform();
+
+  // ===== DRAW ARROWS =====
+  const svg = document.getElementById('arrows-svg');
+
+  function getCenter(el) {
+    const l = parseInt(el.style.left);
+    const t = parseInt(el.style.top);
+    const w = el.offsetWidth || 240;
+    const h = el.offsetHeight || 80;
+    return { x: l + w/2, y: t + h/2, l, t, w, h };
+  }
+
+  function getBottom(el) {
+    const c = getCenter(el);
+    return { x: c.x, y: c.t + c.h };
+  }
+  function getTop(el) {
+    const c = getCenter(el);
+    return { x: c.x, y: c.t };
+  }
+  function getRight(el) {
+    const c = getCenter(el);
+    return { x: c.l + c.w, y: c.y };
+  }
+  function getLeft(el) {
+    const c = getCenter(el);
+    return { x: c.l, y: c.y };
+  }
+
+  function arrow(x1, y1, x2, y2, color='rgba(255,255,255,0.35)', label='', dashed=false) {
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.sqrt(dx*dx + dy*dy);
+    const ux = dx/len, uy = dy/len;
+    const hx = x2 - ux*12, hy = y2 - uy*12;
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    // Curved path
+    const mx = (x1+x2)/2, my = (y1+y2)/2;
+    const cx = mx - dy*0.15, cy = my + dx*0.15;
+    path.setAttribute('d', `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`);
+    path.setAttribute('stroke', color);
+    path.setAttribute('stroke-width', '2');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('marker-end', 'url(#arrowhead)');
+    if (dashed) path.setAttribute('stroke-dasharray', '6 4');
+    svg.appendChild(path);
+
+    if (label) {
+      const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+      t.setAttribute('x', cx);
+      t.setAttribute('y', cy - 6);
+      t.setAttribute('text-anchor', 'middle');
+      t.setAttribute('fill', 'rgba(255,255,255,0.55)');
+      t.setAttribute('font-size', '11');
+      t.setAttribute('font-family', 'Segoe UI, sans-serif');
+      t.textContent = label;
+      svg.appendChild(t);
+    }
+  }
+
+  function straightArrow(x1, y1, x2, y2, color='rgba(255,255,255,0.35)', label='', dashed=false) {
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d', `M ${x1} ${y1} L ${x2} ${y2}`);
+    path.setAttribute('stroke', color);
+    path.setAttribute('stroke-width', '2');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('marker-end', 'url(#arrowhead)');
+    if (dashed) path.setAttribute('stroke-dasharray', '6 4');
+    svg.appendChild(path);
+
+    if (label) {
+      const mx = (x1+x2)/2, my = (y1+y2)/2;
+      const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+      t.setAttribute('x', mx + 6);
+      t.setAttribute('y', my);
+      t.setAttribute('fill', 'rgba(255,255,255,0.55)');
+      t.setAttribute('font-size', '11');
+      t.setAttribute('font-family', 'Segoe UI, sans-serif');
+      t.textContent = label;
+      svg.appendChild(t);
+    }
+  }
+
+  window.addEventListener('load', () => {
+    // Arrowhead marker
+    const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+    const marker = document.createElementNS('http://www.w3.org/2000/svg','marker');
+    marker.setAttribute('id','arrowhead');
+    marker.setAttribute('markerWidth','10');
+    marker.setAttribute('markerHeight','7');
+    marker.setAttribute('refX','10');
+    marker.setAttribute('refY','3.5');
+    marker.setAttribute('orient','auto');
+    const poly = document.createElementNS('http://www.w3.org/2000/svg','polygon');
+    poly.setAttribute('points','0 0, 10 3.5, 0 7');
+    poly.setAttribute('fill','rgba(255,255,255,0.5)');
+    marker.appendChild(poly);
+    defs.appendChild(marker);
+
+    // FK marker (purple)
+    const markerFk = document.createElementNS('http://www.w3.org/2000/svg','marker');
+    markerFk.setAttribute('id','arrowhead-fk');
+    markerFk.setAttribute('markerWidth','10');
+    markerFk.setAttribute('markerHeight','7');
+    markerFk.setAttribute('refX','10');
+    markerFk.setAttribute('refY','3.5');
+    markerFk.setAttribute('orient','auto');
+    const polyFk = document.createElementNS('http://www.w3.org/2000/svg','polygon');
+    polyFk.setAttribute('points','0 0, 10 3.5, 0 7');
+    polyFk.setAttribute('fill','#a5b4fc');
+    markerFk.appendChild(polyFk);
+    defs.appendChild(markerFk);
+
+    svg.insertBefore(defs, svg.firstChild);
+
+    // ---- FLOW ARROWS ----
+    const nStart = document.getElementById('n-start');
+    const nLogin = document.getElementById('n-login');
+    const dLogin = document.getElementById('d-login');
+    const nLoginErr = document.getElementById('n-loginerr');
+    const nChar = document.getElementById('n-char');
+    const nIntro = document.getElementById('n-intro');
+    const nDungeon = document.getElementById('n-dungeon');
+    const nS1 = document.getElementById('n-s1');
+    const nCombat1 = document.getElementById('n-combat1');
+    const dDead1 = document.getElementById('d-dead1');
+    const nGameover = document.getElementById('n-gameover');
+    const dWin1 = document.getElementById('d-win1');
+    const nS2 = document.getElementById('n-s2');
+    const nS3 = document.getElementById('n-s3');
+    const nS4 = document.getElementById('n-s4');
+    const nS5 = document.getElementById('n-s5');
+    const dBoss = document.getElementById('d-boss');
+    const nFinal = document.getElementById('n-final');
+    const nEnd = document.getElementById('n-end');
+    const nLoop = document.getElementById('n-loop');
+    const nClasses = document.getElementById('n-classes');
+
+    function b(el) { return getBottom(el); }
+    function t(el) { return getTop(el); }
+    function r(el) { return getRight(el); }
+    function l(el) { return getLeft(el); }
+    function c(el) { return getCenter(el); }
+
+    // Start → Login
+    straightArrow(b(nStart).x, b(nStart).y, t(nLogin).x, t(nLogin).y);
+    // Login → Decision
+    straightArrow(b(nLogin).x, b(nLogin).y, t(dLogin).x, t(dLogin).y + 10);
+    // Decision → Error (right)
+    straightArrow(r(dLogin).x - 10, c(dLogin).y, l(nLoginErr).x, c(nLoginErr).y, 'rgba(239,68,68,0.7)', 'Não');
+    // Error → Login (loop back)
+    arrow(b(nLoginErr).x, b(nLoginErr).y + 20, r(nLogin).x, c(nLogin).y, 'rgba(239,68,68,0.5)', '', true);
+    // Decision → Char (down)
+    straightArrow(b(dLogin).x, b(dLogin).y - 10, t(nChar).x, t(nChar).y, 'rgba(16,185,129,0.7)', 'Sim');
+    // Char → Classes (right)
+    arrow(r(nChar).x, c(nChar).y, l(nClasses).x, c(nClasses).y, 'rgba(139,92,246,0.5)', '', true);
+    // Char → Intro
+    straightArrow(b(nChar).x, b(nChar).y, t(nIntro).x, t(nIntro).y);
+    // Intro → Dungeon
+    straightArrow(b(nIntro).x, b(nIntro).y, t(nDungeon).x, t(nDungeon).y);
+    // Dungeon → S1
+    straightArrow(b(nDungeon).x, b(nDungeon).y, t(nS1).x, t(nS1).y);
+    // S1 → Combat
+    straightArrow(b(nS1).x, b(nS1).y, t(nCombat1).x, t(nCombat1).y);
+    // Combat → Loop info (right)
+    arrow(r(nCombat1).x, c(nCombat1).y, l(nLoop).x, c(nLoop).y, 'rgba(14,165,233,0.4)', '', true);
+    // Combat → Dead decision
+    straightArrow(b(nCombat1).x, b(nCombat1).y, t(dDead1).x, t(dDead1).y + 10);
+    // Dead → Gameover (right)
+    straightArrow(r(dDead1).x - 10, c(dDead1).y, l(nGameover).x, c(nGameover).y, 'rgba(239,68,68,0.7)', 'Sim');
+    // Dead → Win decision (down)
+    straightArrow(b(dDead1).x, b(dDead1).y - 10, t(dWin1).x, t(dWin1).y + 10, 'rgba(16,185,129,0.7)', 'Não');
+    // Win → S2 (down)
+    straightArrow(b(dWin1).x, b(dWin1).y - 10, t(nS2).x, t(nS2).y, 'rgba(16,185,129,0.7)', 'Sim');
+    // Win → Combat loop back
+    arrow(l(dWin1).x, c(dWin1).y, l(nCombat1).x - 30, c(nCombat1).y, 'rgba(251,191,36,0.5)', 'Não', true);
+    // S2 → S3
+    straightArrow(b(nS2).x, b(nS2).y, t(nS3).x, t(nS3).y);
+    // S3 → S4
+    straightArrow(b(nS3).x, b(nS3).y, t(nS4).x, t(nS4).y);
+    // S4 → S5
+    straightArrow(b(nS4).x, b(nS4).y, t(nS5).x, t(nS5).y);
+    // S5 → Boss decision
+    straightArrow(b(nS5).x, b(nS5).y, t(dBoss).x, t(dBoss).y + 10);
+    // Boss → Final (right)
+    straightArrow(r(dBoss).x - 10, c(dBoss).y, l(nFinal).x, c(nFinal).y, 'rgba(16,185,129,0.7)', 'Sim');
+    // Boss → Gameover (loop, dashed)
+    arrow(b(dBoss).x, b(dBoss).y - 10, b(nGameover).x, b(nGameover).y, 'rgba(239,68,68,0.5)', 'Não', true);
+    // Final → End
+    straightArrow(b(nFinal).x, b(nFinal).y, t(nEnd).x, t(nEnd).y);
+
+    // ---- DB FK ARROWS ----
+    function dbArrow(fromId, toId, label='') {
+      const from = document.getElementById(fromId);
+      const to = document.getElementById(toId);
+      if (!from || !to) return;
+      const fc = getCenter(from), tc = getCenter(to);
+      const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+      const mx = (fc.x + tc.x)/2;
+      path.setAttribute('d', `M ${fc.x} ${fc.y} C ${mx} ${fc.y} ${mx} ${tc.y} ${tc.x} ${tc.y}`);
+      path.setAttribute('stroke', '#a5b4fc');
+      path.setAttribute('stroke-width', '1.5');
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke-dasharray', '5 3');
+      path.setAttribute('marker-end', 'url(#arrowhead-fk)');
+      svg.appendChild(path);
+      if (label) {
+        const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+        t.setAttribute('x', mx);
+        t.setAttribute('y', (fc.y + tc.y)/2 - 6);
+        t.setAttribute('text-anchor', 'middle');
+        t.setAttribute('fill', '#a5b4fc');
+        t.setAttribute('font-size', '10');
+        t.setAttribute('font-family', 'Segoe UI, sans-serif');
+        t.textContent = label;
+        svg.appendChild(t);
+      }
+    }
+
+    dbArrow('t-users', 't-chars', '1:N');
+    dbArrow('t-chars', 't-progress', '1:1');
+    dbArrow('t-chars', 't-items', '1:N');
+    dbArrow('t-rooms', 't-enemies', '1:1');
+    dbArrow('t-progress', 't-combat', '1:N');
+    dbArrow('t-rooms', 't-combat', '1:N');
+
+    // ---- ARCH ARROWS ----
+    function archArrow(fromId, toId) {
+      const from = document.getElementById(fromId);
+      const to = document.getElementById(toId);
+      if (!from || !to) return;
+      const fb = getBottom(from), tt = getTop(to);
+      straightArrow(fb.x, fb.y, tt.x, tt.y, 'rgba(14,165,233,0.4)');
+    }
+    archArrow('cls-main','cls-auth');
+    archArrow('cls-main','cls-char');
+    archArrow('cls-main','cls-dungeon');
+    archArrow('cls-main','cls-narr');
+    archArrow('cls-dungeon','cls-combat');
+    archArrow('cls-combat','cls-enemy');
+    archArrow('cls-combat','cls-inv');
+    archArrow('cls-db','t-users');
+
+    // ---- DATA FLOW ARROWS ----
+    const fdT = document.getElementById('fd-terminal');
+    const fdJ = document.getElementById('fd-java');
+    const fdD = document.getElementById('fd-db');
+    straightArrow(r(fdT).x, c(fdT).y, l(fdJ).x, c(fdJ).y, 'rgba(255,255,255,0.4)', 'input');
+    straightArrow(r(fdJ).x, c(fdJ).y, l(fdD).x, c(fdD).y, 'rgba(16,185,129,0.6)', 'JDBC');
+    arrow(b(fdD).x, b(fdD).y, b(fdJ).x + 20, b(fdJ).y, 'rgba(16,185,129,0.4)', 'resultado', true);
+    arrow(b(fdJ).x - 20, b(fdJ).y, b(fdT).x, b(fdT).y, 'rgba(255,255,255,0.3)', 'output', true);
+  });
+</script>
+</body>
+</html>
