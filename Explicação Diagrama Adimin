@@ -1,0 +1,91 @@
+Explicação do Diagrama (Fluxo do Admin)
+1. Início
+
+Essa é a entrada do sistema.
+É o ponto onde o administrador começa a interação.
+
+2. Tela de Login Admin
+
+Nesta etapa, o administrador deve informar:
+
+Usuário
+Senha
+
+Essa fase tem como objetivo garantir a segurança e o controle de acesso ao sistema.
+
+3. Validação de Login
+
+O sistema verifica se as credenciais informadas estão corretas.
+
+Se o login for inválido:
+O sistema exibe uma mensagem de erro
+O usuário é redirecionado de volta para a tela de login
+Se o login for válido:
+O usuário é direcionado para o Menu Admin
+4. Menu Admin
+
+Esta é a tela principal do administrador, onde estão disponíveis as funcionalidades de gerenciamento do sistema.
+
+Gerenciar Jogadores
+
+Permite ao administrador:
+
+Criar jogadores
+Editar informações
+Remover jogadores
+
+Essa funcionalidade garante o controle total sobre os usuários do sistema.
+
+Logs de Combate
+
+Exibe o histórico das batalhas, incluindo:
+
+Participantes
+Resultados
+Informações relevantes
+
+Essa área é importante para análise e monitoramento do sistema.
+
+Gerenciar Inimigos
+
+Permite:
+
+Criar inimigos
+Ajustar níveis de dificuldade
+Editar atributos
+
+Essa função é essencial para o balanceamento do jogo.
+
+Gerenciar Salas
+
+Possibilita:
+
+Criar novas salas ou mapas
+Editar salas existentes
+Organizar o ambiente do jogo
+
+Define onde as interações dos jogadores irão ocorrer.
+
+Ver Estatísticas
+
+Apresenta dados gerais do sistema, como:
+
+Desempenho dos jogadores
+Informações de combate
+Indicadores do sistema
+
+Auxilia na análise e tomada de decisões.
+
+Logout
+
+Permite ao administrador encerrar sua sessão com segurança.
+
+5. Fim
+
+Após o logout:
+
+A sessão é finalizada
+O fluxo do sistema é encerrado
+Resumo Geral
+
+O diagrama representa o fluxo completo do administrador, desde o acesso ao sistema, passando pela validação de credenciais, utilização das funcionalidades administrativas e finalizando com o encerramento da sessão.
