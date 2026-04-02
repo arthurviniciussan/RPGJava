@@ -1,76 +1,71 @@
-programa
-{
-	inclua biblioteca Util --> u
-	
-	funcao inicio()
-	{
-		// Atributos do Jogador
-		inteiro vidaPlayer = 100
-		inteiro ataquePlayer = 20
-		inteiro curaPlayer = 25
+programa {
 
-		// Atributos do Esqueleto
-		inteiro vidaEsqueleto = 80
-		inteiro ataqueEsqueleto = 15
+    inclua biblioteca Util --> u
 
-		inteiro escolha
+    funcao inicio() {
 
-		escreva("--- UM ESQUELETO APARECEU! ---\n")
+        inteiro vidaPlayer = 100
+        inteiro ataquePlayer = 20
+        inteiro curaPlayer = 25
 
-		// Loop de Combate
-		enquanto(vidaPlayer > 0 e vidaEsqueleto > 0)
-		{
-			escreva("\n------------------------------")
-			escreva("\nSua Vida: ", vidaPlayer)
-			escreva("\nVida do Esqueleto: ", vidaEsqueleto)
-			escreva("\n------------------------------")
-			escreva("\nEscolha sua ação:")
-			escreva("\n1) Atacar")
-			escreva("\n2) Curar")
-			escreva("\nOpção: ")
-			leia(escolha)
+        inteiro vidaEsqueleto = 80
+        inteiro ataqueEsqueleto = 15
 
-			limpa()
+        inteiro nEscolha 
 
-			// Turno do Jogador
-			se(escolha == 1)
-			{
-				escreva("Você golpeia o esqueleto com sua espada!\n")
-				vidaEsqueleto = vidaEsqueleto - ataquePlayer
-				escreva("Dano causado: ", ataquePlayer, "\n")
-			}
-			senao se(escolha == 2)
-			{
-				escreva("Você usa uma poção mágica!\n")
-				vidaPlayer = vidaPlayer + curaPlayer
-				escreva("Você recuperou ", curaPlayer, " de vida!\n")
-			}
-			senao
-			{
-				escreva("Você ficou confuso e perdeu a vez!\n")
-			}
+        escreva ("--- UM ESQUELETO APARECEU! ---\n")
 
-			// Verifica se o esqueleto morreu antes de ele atacar
-			se(vidaEsqueleto > 0)
-			{
-				// Turno do Esqueleto
-				escreva("\nO Esqueleto range os dentes e ataca!\n")
-				u.aguarde(1000) // Pausa de 1 segundo para dar emoção
-				vidaPlayer = vidaPlayer - ataqueEsqueleto
-				escreva("Você recebeu ", ataqueEsqueleto, " de dano!\n")
-			}
-		}
+        enquanto (vidaPlayer > 0 e vidaEsqueleto > 0)
+        {
+            escreva("\n------------------------------")
+            escreva("\nSua Vida: ", vidaPlayer)
+            escreva("\nVida do Esqueleto: ", vidaEsqueleto)
+            escreva("\n------------------------------")
+            escreva("\nEscolha sua ação:")
+            escreva("\n1) Atacar")
+            escreva("\n2) Curar")
+            escreva("\nOpção: ")
+            leia (nEscolha)
 
-		// Resultado Final
-		escreva("\n==============================")
-		se(vidaPlayer > 0)
-		{
-			escreva("\nVITÓRIA! O esqueleto virou pó!")
-		}
-		senao
-		{
-			escreva("\nDERROTA... Você sucumbiu às trevas.")
-		}
-		escreva("\n==============================\n")
-	}
+            se (nEscolha == 1) 
+            {
+                vidaEsqueleto = vidaEsqueleto - ataquePlayer
+                escreva("\nVocê atacou o esqueleto!\n")
+            }
+            senao se (nEscolha == 2)
+            {
+                vidaPlayer = vidaPlayer + curaPlayer
+
+                se (vidaPlayer > 100) 
+                { 
+                    vidaPlayer = 100
+                }
+
+                escreva ("\nVocê se curou!\n")
+            }
+            senao 
+            {
+                escreva ("\nEscolha inválida!\n")
+            }
+
+            // ataque do esqueleto (se ainda estiver vivo)
+            se (vidaEsqueleto > 0) 
+            {
+                vidaPlayer = vidaPlayer - ataqueEsqueleto
+                escreva ("O esqueleto atacou você\n")
+            }
+
+            u.aguarde(1000)
+        }
+
+        // resultado final correto
+        se (vidaPlayer <= 0)
+        {
+            escreva ("\nVOCÊ FOI DERROTADO!")
+        }
+        senao se (vidaEsqueleto <= 0)
+        {
+            escreva ("\nVOCÊ VENCEU! O esqueleto foi derrotado.")
+        }
+    }
 }
