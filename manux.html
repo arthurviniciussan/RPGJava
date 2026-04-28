@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bloodivine | O RPG de Turno Revolucionário</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --blood-red: #8b0000;
+            --dark-bg: #0a0a0a;
+        }
+        body {
+            background-color: var(--dark-bg);
+            color: #e5e7eb;
+            font-family: 'Inter', sans-serif;
+        }
+        h1, h2, h3, .font-cinzel {
+            font-family: 'Cinzel', serif;
+        }
+        .hero-gradient {
+            background: linear-gradient(to bottom, rgba(0,0,0,0.4), var(--dark-bg)), url('https://images.unsplash.com/photo-1519074063912-ad25b5ce4970?auto=format&fit=crop&q=80&w=1920');
+            background-size: cover;
+            background-position: center;
+        }
+        .blood-border {
+            border-bottom: 2px solid var(--blood-red);
+        }
+        .glow-red:hover {
+            text-shadow: 0 0 15px var(--blood-red);
+            color: #ff4d4d;
+        }
+        .btn-blood {
+            background: linear-gradient(45deg, #660000, #b30000);
+            transition: all 0.3s ease;
+        }
+        .btn-blood:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(139, 0, 0, 0.4);
+        }
+        .card-glass {
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(139, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body class="overflow-x-hidden">
+
+    <!-- Navegação -->
+    <nav class="fixed w-full z-50 bg-black/80 backdrop-blur-md border-b border-red-900/30">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <img src="caveirapika.png">
+                <span class="text-2xl font-black tracking-tighter text-red-700 font-cinzel">BLOODIVINE</span>
+            </div>
+            <div class="hidden md:flex space-x-8 font-semibold text-sm uppercase tracking-widest">
+                <a href="#inicio" class="hover:text-red-500 transition">Início</a>
+                <a href="#recursos" class="hover:text-red-500 transition">Recursos</a>
+                <a href="#historia" class="hover:text-red-500 transition">História</a>
+                <a href="#comunidade" class="hover:text-red-500 transition">Comunidade</a>
+            </div>
+            <button class="btn-blood px-6 py-2 rounded-full text-sm font-bold uppercase tracking-tighter">Jogue Agora</button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header id="inicio" class="relative h-screen flex items-center justify-center text-center hero-gradient px-6">
+        <div class="max-w-4xl">
+            <h1 class="text-6xl md:text-8xl font-black text-white mb-6 leading-none">BLOO<span class="text-red-700">DIVINE</span></h1>
+            <p class="text-xl md:text-2xl text-gray-300 mb-10 max-w-2xl mx-auto font-light">
+                jogo dos manos da facul keke kevin the rock.
+            </p>
+            <div class="flex flex-col md:flex-row gap-4 justify-center">
+                <a href="#recursos" class="btn-blood px-10 py-4 rounded-lg text-lg font-bold uppercase tracking-widest">DANI REBOLANDO</a>
+                <a href="#" class="border border-white/20 hover:bg-white/10 px-10 py-4 rounded-lg text-lg font-bold uppercase tracking-widest transition">Ver video hihi</a>
+            </div>
+        </div>
+        <div class="absolute bottom-10 animate-bounce">
+            <svg class="w-6 h-6 text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+        </div>
+    </header>
+
+    <!-- Recursos -->
+    <section id="recursos" class="py-24 px-6 bg-[#050505]">
+        <div class="max-w-7xl mx-auto text-center mb-16">
+            <h2 class="text-4xl md:text-5xl font-bold mb-4 font-cinzel">SISTEMA <span class="text-red-700">REVOLUCIONÁRIO</span></h2>
+            <div class="w-24 h-1 bg-red-700 mx-auto"></div>
+        </div>
+        
+        <div class="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto">
+            <div class="card-glass p-8 rounded-2xl transform hover:-translate-y-2 transition duration-300">
+                <div class="text-red-600 text-4xl mb-6">⚔️</div>
+                <h3 class="text-2xl font-bold mb-4 font-cinzel">Turnos Dinâmicos</h3>
+                <p class="text-gray-400 leading-relaxed">Esqueça a espera. Nosso sistema de iniciativa baseada em ação permite contra-ataques e combos em tempo real.</p>
+            </div>
+            <div class="card-glass p-8 rounded-2xl transform hover:-translate-y-2 transition duration-300">
+                <div class="text-red-600 text-4xl mb-6">🩸</div>
+                <h3 class="text-2xl font-bold mb-4 font-cinzel">Alquimia de Sangue</h3>
+                <p class="text-gray-400 leading-relaxed">Use o sangue de seus inimigos (ou o seu próprio) para conjurar magias devastadoras e rituais proibidos.</p>
+            </div>
+            <div class="card-glass p-8 rounded-2xl transform hover:-translate-y-2 transition duration-300">
+                <div class="text-red-600 text-4xl mb-6">🎭</div>
+                <h3 class="text-2xl font-bold mb-4 font-cinzel">Narrativa Viva</h3>
+                <p class="text-gray-400 leading-relaxed">Cada escolha moral altera o ecossistema do jogo, criando ramificações que tornam cada jornada única.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action / Logo Placeholder -->
+    <section class="py-20 bg-gradient-to-r from-black via-red-950/20 to-black border-y border-red-900/20">
+        <div class="max-w-4xl mx-auto text-center px-6">
+            <div class="mb-12 inline-block p-4 border-2 border-red-700 rounded-full">
+                <img src="https://cdn-icons-png.flaticon.com/512/4334/4334053.png" alt="Logo Bloodivine" class="w-32 h-32 object-contain filter grayscale invert brightness-200">
+            </div>
+            <h2 class="text-3xl md:text-4xl font-bold mb-6 font-cinzel italic">"Onde os deuses sangram, os mortais ascendem."</h2>
+            <p class="text-gray-500 mb-8 uppercase tracking-[0.3em] text-sm">Em breve para PC, Consoles e Mobile</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-black py-12 px-6 border-t border-white/5">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+            <div class="flex items-center space-x-3">
+                <span class="text-2xl font-black text-red-700 font-cinzel">BLOODIVINE</span>
+            </div>
+            <p class="text-gray-600 text-sm">© 2026 Bloodivine Studios. Todos os direitos reservados.</p>
+            <div class="flex space-x-6">
+                <a href="#" class="text-gray-400 hover:text-white transition">Discord</a>
+                <a href="#" class="text-gray-400 hover:text-white transition">Twitter</a>
+                <a href="#" class="text-gray-400 hover:text-white transition">Instagram</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
