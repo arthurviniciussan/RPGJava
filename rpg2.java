@@ -1,6 +1,6 @@
 import java.util.Scanner;
 import java.util.Random;
-330819
+
 public class rpg2 {
     public static void main(String[] args) throws InterruptedException{
 
